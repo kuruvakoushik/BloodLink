@@ -1,0 +1,8 @@
+const API='/api';
+async function api(path,options={}){const response=await fetch(API+path,{credentials:'same-origin',headers:{'Content-Type':'application/json',...(options.headers||{})},...options});let data={};try{data=await response.json()}catch{}if(!response.ok)throw new Error(data.error||`Request failed (${response.status})`);return data}
+function esc(s=''){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function tell(form,msg,error=false){const el=form.querySelector('.message');if(el){el.textContent=msg;el.classList.toggle('error',error);el.classList.remove('hidden')}}
+function val(form,name){return form.elements[name]?.value?.trim()||''}
+async function stats(){try{const s=await api('/stats');for(const k of ['donors','requests','members']){const el=document.querySelector(`[data-stat="${k}"]`);if(el)el.textContent=s[k]}}catch{}}
+async function authNav(){try{const{user}=await api('/auth/me');document.querySelectorAll('[data-auth="guest"]').forEach(x=>x.classList.add('hidden'));document.querySelectorAll('[data-auth="user"]').forEach(x=>x.classList.remove('hidden'));const name=document.querySelector('[data-user-name]');if(name)name.textContent=user.full_name;if(user.role==='admin')document.querySelectorAll('[data-admin-link]').forEach(x=>x.classList.remove('hidden'))}catch{document.querySelectorAll('[data-auth="user"]').forEach(x=>x.classList.add('hidden'))}}
+document.addEventListener('DOMContentLoaded',()=>{stats();authNav();document.querySelectorAll('[data-logout]').forEach(b=>b.addEventListener('click',async e=>{e.preventDefault();try{await api('/auth/logout',{method:'POST'})}finally{location.href='/index.html'}}))});
